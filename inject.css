@@ -1,0 +1,32 @@
+.corate-highlight-text {
+	background-color: yellow !important;
+    position: relative !important;
+}
+
+.corate-remove-quote {
+    margin: 0 !important;
+    padding: 0 !important;
+	text-decoration: none !important;
+	display: inline-block !important;
+    background-color: #555958 !important;
+    border-radius: 50px !important;
+    width: 10px !important;
+    height: 10px !important;
+    line-height: 10px !important;
+    overflow: hidden !important;
+    transform: translateX(-4px) !important;
+    text-align: center !important;
+    font-size: 7px !important;
+    color: #ffffff !important;
+    position: absolute !important;
+}
+
+.corate-remove-quote:hover {
+    background-color: #555958 !important;
+    color: #ffffff !important !important;
+    text-decoration: none !important;
+}
+
+.corate-non-bg .corate-remove-quote {
+	display: none !important;
+}

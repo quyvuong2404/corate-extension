@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+  "name": "Corate",
+  "description": "Organizing Modern Knowledge for Mankind",
+  "version": "1.1",
+  "icons": {"16": "icon-on.png", "48": "icon-on.png", "128": "icon-on.png"},
+  "browser_action": {
+   "default_icon": "icon-off.png",
+   "default_title": "Corate - Organizing Modern Knowledge for Mankind"
+  },
+  "background": {
+    "scripts": ["jquery-2.2.0.min.js", "background.js"],
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["jquery-2.2.0.min.js", "hilitor.js", "inject.js"],
+      "run_at": "document_end",
+      "all_frames": true,
+      "css": ["inject.css"]
+    }
+  ],
+  "permissions": [
+    "storage",
+    "cookies",
+    "activeTab",
+    "http://*/*", "https://*/*"
+  ]
+}
