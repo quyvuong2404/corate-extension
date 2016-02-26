@@ -15,7 +15,7 @@
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["jquery-2.2.0.min.js", "hilitor.js", "inject.js"],
+      "js": ["jquery-2.2.0.min.js", "searchandhighlight.js", "api.js", "inject.js"],
       "run_at": "document_end",
       "all_frames": true,
       "css": ["inject.css"]

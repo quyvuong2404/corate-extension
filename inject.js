@@ -1,12 +1,12 @@
 "use strict";
 
 var mode, domain, oauth = null;
-var localMode;
+var mouseUpTarget, mouseDownTarget;
+var localMode = 'corate-mode';
 
 window.onload = function() {
     if (window.top === window) {
         domain = top.location.href;
-        localMode = 'corate-mode';
         mode = getMode();
         sendMode('getmode', mode);
         if (mode == true) {
@@ -19,7 +19,8 @@ window.onload = function() {
 }
 
 // trigger event mouse-up
-window.addEventListener('mouseup', function(){
+window.addEventListener('mouseup', function(e){
+    mouseUpTarget = e.target;
     if (mode === true) {
         if (oauth != null) {
             setTimeout(function(){
@@ -29,13 +30,18 @@ window.addEventListener('mouseup', function(){
     }
 });
 
-function getText() {
+window.addEventListener('mousedown', function(e){
+    mouseDownTarget = e.target;
+});
+
+
+/*function getText() {
     if (oauth != null) {
         sendMode("gettext", domain);
     }
-}
+}*/
 
-function getOauth() {
+/*function getOauth() {
     chrome.runtime.sendMessage({type: 'oauth'}, function(response){console.log(response.token);
         if (response.authenticated == 1) {
             oauth = response;
@@ -44,7 +50,7 @@ function getOauth() {
             oauth = null;
         }
     });
-}
+}*/
 
 function getDomainMode() {
     if (localStorage.getItem(localMode) != null) {
@@ -59,32 +65,30 @@ function setDomainMode(m) {
     if (m == false) {
         turnOff();
     } else {
-        if (oauth != null) {
-            getText();
-        }
+        turnOn();
     }
 }
 
 function sendMode(type, m) {
     chrome.runtime.sendMessage({type: type, mode: m}, function(response){
         switch(type) {
-            case 'gettext':console.log(response);
+            /*case 'gettext':console.log(response);
                 if (response.found) {
                     for (var i = 0; i < response.text.length; i++) {
                         var text = response.text[i].text;
                         var id = response.text[i].id;
-                        var span = highlightElement(text, id);
-                        document.body.innerHTML = document.body.innerHTML.replace(text, '<span id="'+id+'" style="background: yellow">'+text+'</span>');
-                        $('span#'+id).replaceWith(span);
-                        // var myHilitor = new Hilitor();
-                        // myHilitor.apply(text);
+                        var containerPath = response.text[i].path;
+                        var containerNode = locateNodeFromPath(document.body, containerPath.split(','));
+                        console.log(containerNode);
+                        highlightSearchTerms(id, containerNode, text, true, false);
+                        addRemoveAction(id);
                     }
                 }
-            break;
+            break;*/
 
-            case 'replace':
-                replaceAction(response.res, m.text);
-            break;
+            /*case 'replace':
+                replaceAction(response, m.text);
+            break;*/
         }
     });
 }
@@ -105,16 +109,6 @@ function connectBackground(p) {
     return chrome.extension.connect({ name:  p });
 }
 
-// send to background
-function sendMessage(selectedText) {
-    var data = { 
-        text: selectedText, 
-        url: window.location.href,
-        title: document.title
-    };
-    sendMode('replace', data);
-}
-
 // switch mode
 chrome.extension.onMessage.addListener(function(msg, sender, sendResponse){
     switch(msg.type) {
@@ -123,65 +117,124 @@ chrome.extension.onMessage.addListener(function(msg, sender, sendResponse){
             setDomainMode(mode);
         break;
 
-        case "getoauth":
+        /*case "getoauth":
             oauth = msg.mode;
-            getText();
-        break;
+        break;*/
     }
 });
 
 function turnOff() {
     var highlightedElement = $('.corate-highlight-text');
-    highlightedElement.replaceWith(highlightedElement.text());
+    highlightedElement.removeClass('corate-highlight-text').addClass('corate-non-bg');
+}
+
+function turnOn() {
+    if (oauth != null) {
+        var replacedElement = $('.corate').not('.corate-removed');
+        replacedElement.removeClass('corate-non-bg').addClass('corate-highlight-text');
+    }
 }
 
 // get highlighted text
 function getSelectedText() {
+    var content = "";
+    var selectedPath = [];
     var text = "";
+    var htmltext = "";
     if (typeof window.getSelection != "undefined") {
-        text = window.getSelection().toString();
-    } else if (typeof document.selection != "undefined" && document.selection.type == "Text") {
-        text = document.selection.createRange().text;
+        var sel = window.getSelection();
+        if (sel.rangeCount) {// console.log(mouseDownTarget, mouseUpTarget);
+            text = sel.toString();console.log(text);
+            if (text) {
+                /*console.log('start node ',sel.anchorNode.parentNode, sel.anchorOffset);
+                console.log('end node ',sel.focusNode.parentNode, sel.focusOffset);
+                var startNode = sel.anchorNode.parentNode;
+                var endNode = sel.focusNode.parentNode;
+                console.log(startNode !== endNode ? 'not same parent node':'same parent node');*/
+                var range = sel.getRangeAt(0);
+                content = range.cloneContents();
+                /*var n = content.childNodes.length;console.log(n);
+                var inlineTag = ['b','big','i','small','tt','abbr','acronym','cite','code','dfn','em','kbd','strong','samp','time','var','a','bdo','br','img','map','object','q','script','span','sub','sup'];
+                for (var i = 0; i < n; i++) {
+                    if (content.childNodes[i].nodeName !== '#text') {
+                        console.log('child frag ',content.childNodes[i],content.childNodes[i].nodeName,content.childNodes[i].textContent);
+                    } else {
+                        console.log('child frag ',content.childNodes[i],content.childNodes[i].nodeName,content.childNodes[i].textContent, content.childNodes[i].textContent === null);
+                    }
+                }*/
+                var span = document.createElement('span');
+                span.appendChild(content);console.log(span.childNodes, span.children);
+                htmltext = span.innerHTML;console.log(text);
+                var selectedNode = sel.getRangeAt(0).commonAncestorContainer;
+                // console.log('selected node', selectedNode);
+                var parentEl = selectedNode.nodeType === 3 ? selectedNode.parentNode : selectedNode;
+                // console.log('parent selected node', parentEl);
+                
+                // console.log(parentEl, parentEl.nodeType == 3);
+                selectedPath = getNodePath(document.body, parentEl);
+            }
+        }
     }
-    return text;
+    return {
+        text: text,
+        path: selectedPath.toString(),
+        htmltext: htmltext
+    };
+}
+
+// send to background
+function sendMessage(selectedText) {
+    var data = { 
+        text: selectedText.text, 
+        url: window.location.href,
+        title: document.title,
+        nodePath: selectedText.path,
+        htmltext: selectedText.htmltext
+    };
+    sendToServer(data);
+    // sendMode('replace', data);
+}
+
+function indexOf(arrLike, target) {
+    return Array.prototype.indexOf.call(arrLike, target);
+}
+
+function getNodePath(root, target) {
+    var current = target;
+    var path = [];
+    while(current !== root) {
+        path.unshift(indexOf(current.parentNode.childNodes, current));
+        current = current.parentNode;
+    }
+    return path;
+}
+
+function locateNodeFromPath(root, path) {
+    var current = root;
+    for(var i = 0, len = path.length; i < len; i++) {
+        current = current.childNodes[path[i]];
+    }
+    return current;
 }
 
 function replaceAction(id, selectedText) {
-    var myHilitor = new Hilitor();
-    myHilitor.apply(selectedText);
-    // var span = highlightElement(selectedText, id);
-    // replaceHighlightedText(span);
+    var span = highlightElement(selectedText, id);
+    replaceHighlightedText(span);
 }
 
 // highlight action
 function doQuote() {
     var selectedText = getSelectedText();
-    if (selectedText) {
-        sendMessage(selectedText);
-        /*var r = window.getSelection().getRangeAt(0).getBoundingClientRect();
-        if (!r.isCollapsed) {
-            var relative = document.body.parentNode.getBoundingClientRect();
-            var ele = document.getElementById('task-quote');
-            ele.style.display = 'inline-block';
-            ele.style.top = (r.bottom - relative.top) - (r.bottom - r.top) - ele.clientHeight + 'px';
-            ele.style.right = -(r.right - relative.right) + (r.right - r.left) - ele.clientWidth + 'px';
-        }*/
+    if (selectedText.text) {console.log(selectedText);
+        // sendMessage(selectedText);
     }
 }
 
 function replaceHighlightedText(replacedElement) {
-    var sel, range;
-    if (window.getSelection) {
-        sel = window.getSelection();
-        if (sel.rangeCount) {
-            range = sel.getRangeAt(0);
-            range.deleteContents();
-            range.insertNode(replacedElement);
-        }
-    } else if (document.selection && document.selection.createRange) {
-        range = document.selection.createRange();
-        range.text = replacedElement;
-    }
+    var sel = window.getSelection();
+    var range = sel.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(replacedElement);
 }
 
 function highlightElement(hText, id) {
@@ -194,20 +247,19 @@ function highlightElement(hText, id) {
     removeIcon.setAttribute('href', '#');
     removeIcon.setAttribute('class', 'corate-remove-quote');
     removeIcon.innerHTML = 'X';
-    // removeIcon.onclick = function() {}
-    removeIcon.addEventListener('click', function(e){
-        e.preventDefault();
-        var thisElement = this;
-        var parent = thisElement.parentNode;
-        var text = parent.innerHTML;
-        var grandPa = parent.parentNode;
-        var idQ = parent.id;console.log(idQ);
-        sendMode('deletequote', idQ);
-        parent.className = 'corate corate-non-bg';
-        // $(parent).remove('.corate-remove-quote');
-        // $(parent).replaceWith(text);
-        // grandPa.replaceChild(document.createTextNode(text), parent);
-    });
+    addRemoveAction(id);
     span.appendChild(removeIcon);
     return span;
+}
+
+function addRemoveAction(id) {
+    $(document).on('click', '#'+id+' a.corate-remove-quote', function(e){
+        e.preventDefault();
+        var thisElement = this;
+        var parent = $(thisElement).parent();
+        var idQ = parent.attr('id');console.log(idQ);
+        // sendMode('deletequote', idQ);
+        removeQuote(idQ);
+        parent.removeClass('corate-highlight-text').addClass('corate-non-bg').addClass('corate-removed');
+    });
 }

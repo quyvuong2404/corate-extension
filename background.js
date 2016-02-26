@@ -1,69 +1,17 @@
 var mode = null;
-// var serverDomain = 'http://localhost:3000';
-var serverDomain = 'http://nodejs.gpat.vn:3000';
+var serverDomain = 'http://localhost:3000';
+// var serverDomain = 'http://nodejs.gpat.vn:3000';
 var oauth = null;
 
 "use strict";
 
-(function(){
-    console.log(oauth);
-})();
+// (function(){})();
 
 // document.addEventListener('DOMContentLoaded', function(){});
 // window.onload = function(){}
 
-// receive message from inject when page onload
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    switch(request.type) {
-        case "getmode":
-            mode = request.mode;
-            if (mode === true) {
-                changeIcon('icon-on.png');
-            } else {
-                changeIcon('icon-off.png');
-            }
-        break;
 
-        case "oauth":
-            getOauth(function(result){console.log(result);
-                oauth = result;
-                sendResponse(result);
-            });
-        break;
-
-        case "deletequote":
-            removeQuote(request.mode);
-        break;
-
-        case "gettext":
-            getText(request.mode, function(result){console.log(result);
-                sendResponse(result);
-            });
-        break;
-
-        case "replace":
-            sendToServer(request.mode).then(function(response){console.log(response);
-                sendResponse(response);
-            });
-        break;
-    }
-    return true;
-});
-
-// receive from inject
-/*chrome.extension.onConnect.addListener(function (port) {
-    port.onMessage.addListener(function (message) {
-        switch(port.name) {
-            case "corate":
-                sendToServer(message).then(function(response){console.log(response);
-                    port.postMessage({type: 'replace', res: response});
-                });
-            break;
-        }
-    });
-});*/
-
-function removeQuote(idQ) {
+/*function removeQuote(idQ) {
     $.ajax({
         url: serverDomain + "/api/delete",
         data: {idQ: idQ},
@@ -76,10 +24,10 @@ function removeQuote(idQ) {
             console.log(error);
         }
     })
-}
+}*/
 
 // get authenticated infor from server
-function getOauth(callback) {
+/*function getOauth(callback) {
     $.ajax({
         url: serverDomain + "/api/oauth",
         type: "GET",
@@ -91,9 +39,9 @@ function getOauth(callback) {
             console.log(error);
         }
     });
-}
+}*/
 
-function getText(url, callback) {
+/*function getText(url, callback) {
     $.ajax({
         url:  serverDomain + "/api/on",
         type: "POST",
@@ -106,33 +54,31 @@ function getText(url, callback) {
             console.log(error);
         }
     });
-}
+}*/
 
-function sendToServer(data) {
-    return new Promise((resolve, reject) => {
-        try {
-            var xhr = new XMLHttpRequest();
-            var url = serverDomain + "/api/create";
-            xhr.open('POST', url, true);
-            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded; charset=UTF-8');
-            xhr.onload = function() {
-                if(xhr.readyState == 4 && xhr.status == 200) {
-                    var response = JSON.parse(xhr.responseText);
-                    if (!response.error) {console.log(response.id);
-                        resolve(response.id);
-                    }
-                }
+/*function sendToServer(data, callback) {
+    var xhr = new XMLHttpRequest();
+    var url = serverDomain + "/api/create";
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded; charset=UTF-8');
+    xhr.onload = function() {
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            var response = JSON.parse(xhr.responseText);
+            if (!response.error) {console.log(response.id);
+                callback(response.id);
             }
-            xhr.send('text='+data.text+'&url='+data.url+'&title='+data.title+'&id='+oauth.id);
-        } catch(e) {
-            console.log('Catch Error: ', e);
-            reject(e);
         }
-    });
-}
+    }
+    xhr.send('text='+data.text
+            +'&url='+data.url
+            +'&title='+data.title
+            +'&nodePath='+data.nodePath
+            +'&id='+oauth.id
+            +'&htmltext='+oauth.htmltext);
+}*/
 
 // change icon
-function changeIcon(iconName) {
+function changeIcon(iconName) {console.log('change icon', iconName);
     chrome.tabs.getSelected(null, function(tab){
         chrome.browserAction.setIcon({
             path: iconName,
@@ -153,7 +99,7 @@ chrome.browserAction.onClicked.addListener(function(tab){
     mode = !mode;console.log(mode);console.log(oauth);
     if (mode) {
         changeIcon('icon-on.png');
-        if (oauth == null) {
+        /*if (oauth == null) {
             getOauth(function(response){
                 oauth = response;console.log(oauth);
                 sendToInject({type: 'switchmode', mode: mode});
@@ -162,9 +108,46 @@ chrome.browserAction.onClicked.addListener(function(tab){
         } else {
             sendToInject({type: "getoauth", mode: oauth});
             sendToInject({type: 'switchmode', mode: mode});
-        }
+        }*/
     } else {
         changeIcon('icon-off.png');
-        sendToInject({type: 'switchmode', mode: mode});
+    }
+    sendToInject({type: 'switchmode', mode: mode});
+});
+
+// receive message from inject when page onload
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    switch(request.type) {
+        case "getmode":
+            mode = request.mode;console.log('get mode', mode);
+            if (mode === true) {
+                changeIcon('icon-on.png');
+            } else {
+                changeIcon('icon-off.png');
+            }
+        break;
+
+        /*case "oauth":
+            getOauth(function(result){console.log(result);
+                oauth = result;
+                sendResponse(result);
+            });
+        break;*/
+
+        /*case "deletequote":
+            removeQuote(request.mode);
+        break;*/
+
+        /*case "gettext":
+            getText(request.mode, function(result){console.log(result);
+                sendResponse(result);
+            });
+        break;*/
+
+        /*case "replace":
+            sendToServer(request.mode, function(response){console.log(response);
+                sendResponse(response);
+            });
+        break;*/
     }
 });
