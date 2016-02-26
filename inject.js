@@ -226,7 +226,7 @@ function replaceAction(id, selectedText) {
 function doQuote() {
     var selectedText = getSelectedText();
     if (selectedText.text) {console.log(selectedText);
-        // sendMessage(selectedText);
+        sendMessage(selectedText);
     }
 }
 
