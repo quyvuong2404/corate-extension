@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Corate",
   "description": "Organizing Modern Knowledge for Mankind",
-  "version": "1.1",
+  "version": "1.0",
   "icons": {"16": "icon-on.png", "48": "icon-on.png", "128": "icon-on.png"},
   "browser_action": {
    "default_icon": "icon-off.png",

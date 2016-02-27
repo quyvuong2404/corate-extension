@@ -10,13 +10,9 @@ var localMode = 'corate-mode';
         domain = top.location.href;
         mode = getMode();console.log(mode);
         sendMode('getmode', mode);
-        if (mode == true) {
-            if (oauth == null) {
-                getOauth();
-            }
-        }
     }
 })();
+
 
 // trigger event mouse-up
 window.addEventListener('mouseup', function(e){
@@ -35,15 +31,35 @@ window.addEventListener('mousedown', function(e){
 });
 
 
-function getText() {
+function getText() {console.log('get text');
     if (oauth != null) {
-        sendMode("gettext", domain);
+        chrome.runtime.sendMessage({type: 'gettext', mode: domain}, function(response){
+            console.log(response);
+            if (response.found) {
+                for (var i = 0; i < response.text.length; i++) {
+                    var text = response.text[i].text;
+                    var id = response.text[i].id;
+                    var containerPath = response.text[i].path;
+                    var containerNode = locateNodeFromPath(document.body, containerPath.split(','));
+                    console.log(containerNode);
+                    highlightSearchTerms(id, containerNode, text, true, false);
+                    addRemoveAction(id);
+                }
+            }
+        });
     }
 }
 
-function getOauth() {
-    sendMode('oauth', null);
-    // chrome.runtime.sendMessage({type: 'oauth'}, function(response){});
+function getOauth() {console.log('get oauth');
+    chrome.runtime.sendMessage({type: 'oauth', mode: ''}, function(response){
+        console.log(response);
+        if (response.authenticated == 1) {
+            oauth = response;
+            getText();
+        } else {
+            oauth = null;
+        }
+    });
 }
 
 function getDomainMode() {
@@ -63,40 +79,11 @@ function setDomainMode(m) {
     }
 }
 
-function sendMode(type, m) {
+function sendMode(type, m) {console.log('send mode');
     chrome.runtime.sendMessage({type: type, mode: m}, function(response){
-        switch(type) {
-            case 'gettext':console.log(response);
-                if (response.found) {
-                    for (var i = 0; i < response.text.length; i++) {
-                        var text = response.text[i].text;
-                        var id = response.text[i].id;
-                        var containerPath = response.text[i].path;
-                        var containerNode = locateNodeFromPath(document.body, containerPath.split(','));
-                        console.log(containerNode);
-                        highlightSearchTerms(id, containerNode, text, true, false);
-                        addRemoveAction(id);
-                    }
-                }
-            break;
-
-            case 'replace':
-                replaceAction(response, m.text);
-            break;
-
-            case 'oauth':
-                console.log(response.token);
-                if (response.authenticated == 1) {
-                    oauth = response;
-                    getText();
-                } else {
-                    oauth = null;
-                }
-            break;
-
-            case 'getmode':
-                console.log('mode', m);
-            break;
+        console.log('mode', m);
+        if (m == true) {console.log(response);
+            getOauth();
         }
     });
 }
@@ -199,8 +186,10 @@ function sendMessage(selectedText) {
         nodePath: selectedText.path,
         htmltext: selectedText.htmltext
     };
-    // sendToServer(data);
-    sendMode('replace', data);
+    // sendMode('replace', data);
+    chrome.runtime.sendMessage({type: 'replace', mode: data}, function(response){
+        replaceAction(response, data.htmltext);
+    });
 }
 
 function indexOf(arrLike, target) {

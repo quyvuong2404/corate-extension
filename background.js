@@ -1,11 +1,13 @@
 var mode = null;
-// var serverDomain = 'http://localhost:3000';
+var serverDomain = 'http://localhost:3000';
 // var serverDomain = 'http://nodejs.gpat.vn:3000';
 var oauth = null;
 
 "use strict";
 
-// (function(){})();
+(function(){
+    console.log(oauth);
+})();
 
 // document.addEventListener('DOMContentLoaded', function(){});
 // window.onload = function(){}
@@ -97,6 +99,7 @@ function sendToInject(data) {
 
 chrome.browserAction.onClicked.addListener(function(tab){
     mode = !mode;console.log(mode);console.log(oauth);
+    sendToInject({type: 'switchmode', mode: mode});
     if (mode) {
         changeIcon('icon-on.png');
         if (oauth == null) {
@@ -112,7 +115,7 @@ chrome.browserAction.onClicked.addListener(function(tab){
     } else {
         changeIcon('icon-off.png');
     }
-    sendToInject({type: 'switchmode', mode: mode});
+    // sendToInject({type: 'switchmode', mode: mode});
 });
 
 // receive message from inject when page onload
@@ -125,6 +128,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             } else {
                 changeIcon('icon-off.png');
             }
+            sendResponse('has changed icon');
         break;
 
         case "oauth":
@@ -150,4 +154,5 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             });
         break;
     }
+    return true;
 });
