@@ -1,5 +1,5 @@
 var mode = null;
-var serverDomain = 'http://localhost:3000';
+// var serverDomain = 'http://localhost:3000';
 // var serverDomain = 'http://nodejs.gpat.vn:3000';
 var oauth = null;
 
@@ -11,7 +11,7 @@ var oauth = null;
 // window.onload = function(){}
 
 
-/*function removeQuote(idQ) {
+function removeQuote(idQ) {
     $.ajax({
         url: serverDomain + "/api/delete",
         data: {idQ: idQ},
@@ -24,10 +24,10 @@ var oauth = null;
             console.log(error);
         }
     })
-}*/
+}
 
 // get authenticated infor from server
-/*function getOauth(callback) {
+function getOauth(callback) {
     $.ajax({
         url: serverDomain + "/api/oauth",
         type: "GET",
@@ -39,9 +39,9 @@ var oauth = null;
             console.log(error);
         }
     });
-}*/
+}
 
-/*function getText(url, callback) {
+function getText(url, callback) {
     $.ajax({
         url:  serverDomain + "/api/on",
         type: "POST",
@@ -54,9 +54,9 @@ var oauth = null;
             console.log(error);
         }
     });
-}*/
+}
 
-/*function sendToServer(data, callback) {
+function sendToServer(data, callback) {
     var xhr = new XMLHttpRequest();
     var url = serverDomain + "/api/create";
     xhr.open('POST', url, true);
@@ -75,7 +75,7 @@ var oauth = null;
             +'&nodePath='+data.nodePath
             +'&id='+oauth.id
             +'&htmltext='+oauth.htmltext);
-}*/
+}
 
 // change icon
 function changeIcon(iconName) {console.log('change icon', iconName);
@@ -99,16 +99,16 @@ chrome.browserAction.onClicked.addListener(function(tab){
     mode = !mode;console.log(mode);console.log(oauth);
     if (mode) {
         changeIcon('icon-on.png');
-        /*if (oauth == null) {
+        if (oauth == null) {
             getOauth(function(response){
                 oauth = response;console.log(oauth);
-                sendToInject({type: 'switchmode', mode: mode});
+                // sendToInject({type: 'switchmode', mode: mode});
                 sendToInject({type: "getoauth", mode: oauth});
             });
         } else {
             sendToInject({type: "getoauth", mode: oauth});
-            sendToInject({type: 'switchmode', mode: mode});
-        }*/
+            // sendToInject({type: 'switchmode', mode: mode});
+        }
     } else {
         changeIcon('icon-off.png');
     }
@@ -127,27 +127,27 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             }
         break;
 
-        /*case "oauth":
+        case "oauth":
             getOauth(function(result){console.log(result);
                 oauth = result;
                 sendResponse(result);
             });
-        break;*/
+        break;
 
-        /*case "deletequote":
+        case "deletequote":
             removeQuote(request.mode);
-        break;*/
+        break;
 
-        /*case "gettext":
+        case "gettext":
             getText(request.mode, function(result){console.log(result);
                 sendResponse(result);
             });
-        break;*/
+        break;
 
-        /*case "replace":
+        case "replace":
             sendToServer(request.mode, function(response){console.log(response);
                 sendResponse(response);
             });
-        break;*/
+        break;
     }
 });

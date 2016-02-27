@@ -4,19 +4,19 @@ var mode, domain, oauth = null;
 var mouseUpTarget, mouseDownTarget;
 var localMode = 'corate-mode';
 
-window.onload = function() {
+(function(){
     if (window.top === window) {
+        console.log('Corate say hello');
         domain = top.location.href;
-        mode = getMode();
+        mode = getMode();console.log(mode);
         sendMode('getmode', mode);
         if (mode == true) {
             if (oauth == null) {
                 getOauth();
             }
         }
-        console.log('Corate say hello');
     }
-}
+})();
 
 // trigger event mouse-up
 window.addEventListener('mouseup', function(e){
@@ -35,22 +35,16 @@ window.addEventListener('mousedown', function(e){
 });
 
 
-/*function getText() {
+function getText() {
     if (oauth != null) {
         sendMode("gettext", domain);
     }
-}*/
+}
 
-/*function getOauth() {
-    chrome.runtime.sendMessage({type: 'oauth'}, function(response){console.log(response.token);
-        if (response.authenticated == 1) {
-            oauth = response;
-            getText();
-        } else {
-            oauth = null;
-        }
-    });
-}*/
+function getOauth() {
+    sendMode('oauth', null);
+    // chrome.runtime.sendMessage({type: 'oauth'}, function(response){});
+}
 
 function getDomainMode() {
     if (localStorage.getItem(localMode) != null) {
@@ -72,7 +66,7 @@ function setDomainMode(m) {
 function sendMode(type, m) {
     chrome.runtime.sendMessage({type: type, mode: m}, function(response){
         switch(type) {
-            /*case 'gettext':console.log(response);
+            case 'gettext':console.log(response);
                 if (response.found) {
                     for (var i = 0; i < response.text.length; i++) {
                         var text = response.text[i].text;
@@ -84,11 +78,25 @@ function sendMode(type, m) {
                         addRemoveAction(id);
                     }
                 }
-            break;*/
+            break;
 
-            /*case 'replace':
+            case 'replace':
                 replaceAction(response, m.text);
-            break;*/
+            break;
+
+            case 'oauth':
+                console.log(response.token);
+                if (response.authenticated == 1) {
+                    oauth = response;
+                    getText();
+                } else {
+                    oauth = null;
+                }
+            break;
+
+            case 'getmode':
+                console.log('mode', m);
+            break;
         }
     });
 }
@@ -117,9 +125,9 @@ chrome.extension.onMessage.addListener(function(msg, sender, sendResponse){
             setDomainMode(mode);
         break;
 
-        /*case "getoauth":
+        case "getoauth":
             oauth = msg.mode;
-        break;*/
+        break;
     }
 });
 
@@ -191,8 +199,8 @@ function sendMessage(selectedText) {
         nodePath: selectedText.path,
         htmltext: selectedText.htmltext
     };
-    sendToServer(data);
-    // sendMode('replace', data);
+    // sendToServer(data);
+    sendMode('replace', data);
 }
 
 function indexOf(arrLike, target) {
@@ -258,8 +266,8 @@ function addRemoveAction(id) {
         var thisElement = this;
         var parent = $(thisElement).parent();
         var idQ = parent.attr('id');console.log(idQ);
-        // sendMode('deletequote', idQ);
-        removeQuote(idQ);
+        sendMode('deletequote', idQ);
+        // removeQuote(idQ);
         parent.removeClass('corate-highlight-text').addClass('corate-non-bg').addClass('corate-removed');
     });
 }

@@ -1,4 +1,4 @@
-var serverDomain = 'http://localhost:3000';
+// var serverDomain = 'http://localhost:3000';
 // var serverDomain = 'http://nodejs.gpat.vn:3000';
 
 function removeQuote(idQ) {
