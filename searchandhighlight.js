@@ -18,10 +18,10 @@ function doHighlight(id, bodyText, searchTerm, highlightStartTag, highlightEndTa
   // regular expression search, because we want to filter out
   // matches that occur within HTML tags and script blocks, so
   // we have to do a little extra validation)
-  var newText = "";console.log(bodyText);
+  var newText = "";
   var i = -1;
-  var lcSearchTerm = searchTerm.toLowerCase();console.log(lcSearchTerm);
-  var lcBodyText = bodyText.toLowerCase();console.log(lcBodyText);
+  var lcSearchTerm = searchTerm.toLowerCase();
+  var lcBodyText = bodyText.toLowerCase();
     
   while (bodyText.length > 0) {
     i = lcBodyText.indexOf(lcSearchTerm, i+1);
@@ -71,13 +71,13 @@ function highlightSearchTerms(id, containerNode, searchText, treatAsPhrase, warn
     }
     return false;
   }
-  var bodyNode = containerNode ? containerNode : document.body;console.log(bodyNode);
+  var bodyNode = containerNode ? containerNode : document.body;
   var bodyText = bodyNode.innerHTML;
   for (var i = 0; i < searchArray.length; i++) {
     bodyText = doHighlight(id, bodyText, searchArray[i], highlightStartTag, highlightEndTag);
   }
   
-  bodyNode.innerHTML = bodyText;console.log(bodyText);
+  bodyNode.innerHTML = bodyText;
   return true;
 }
 

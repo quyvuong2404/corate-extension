@@ -2,14 +2,17 @@
 
 var mode, domain, oauth = null;
 var mouseUpTarget, mouseDownTarget;
-var localMode = 'corate-mode';
+var localMode = 'corateMode';
+var rootDOM = document.documentElement;
 
 (function(){
     if (window.top === window) {
+        var v = '113,1,11,0,0,1,4,1,1';console.log(v.split(','));
         console.log('Corate say hello');
         domain = top.location.href;
-        mode = getMode();console.log(mode);
-        sendMode('getmode', mode);
+        getMode();
+        getOauth();
+        // console.log(locateNodeFromPath(rootDOM, v.split(',')));
     }
 })();
 
@@ -32,7 +35,7 @@ window.addEventListener('mousedown', function(e){
 
 
 function getText() {console.log('get text');
-    if (oauth != null) {
+    if (oauth != null && mode === true) {
         chrome.runtime.sendMessage({type: 'gettext', mode: domain}, function(response){
             console.log(response);
             if (response.found) {
@@ -40,7 +43,7 @@ function getText() {console.log('get text');
                     var text = response.text[i].text;
                     var id = response.text[i].id;
                     var containerPath = response.text[i].path;
-                    var containerNode = locateNodeFromPath(document.body, containerPath.split(','));
+                    var containerNode = locateNodeFromPath(rootDOM, containerPath.split(','));
                     console.log(containerNode);
                     highlightSearchTerms(id, containerNode, text, true, false);
                     addRemoveAction(id);
@@ -62,16 +65,21 @@ function getOauth() {console.log('get oauth');
     });
 }
 
-function getDomainMode() {
-    if (localStorage.getItem(localMode) != null) {
-        return localStorage.getItem(localMode);
-    } else {
-        return false;
-    }
+function getDomainMode(callback) {
+    chrome.storage.local.get('corateMode', function(data){
+        console.log(data);
+        callback(data.corateMode);
+    });
 }
 
-function setDomainMode(m) {
-    localStorage.setItem(localMode, m);
+function setDomainMode(m) {console.log('set mode');
+    chrome.storage.local.set({corateMode: m}, function(){
+        if (chrome.runtime.lastError) {
+            console.log(chrome.runtime.lastError);
+        } else {
+            console.log('mode is set');
+        }
+    });
     if (m == false) {
         turnOff();
     } else {
@@ -81,30 +89,19 @@ function setDomainMode(m) {
 
 function sendMode(type, m) {console.log('send mode');
     chrome.runtime.sendMessage({type: type, mode: m}, function(response){
-        console.log('mode', m);
-        if (m == true) {console.log(response);
-            getOauth();
-        }
+        console.log('mode', m, response);
     });
 }
 
 function getMode() {
-    var m = getDomainMode();
-    if (m === "true") {
-        m = true;
-    } else {
-        m = false;
-    }
-    return m;
+    getDomainMode(function(m){console.log(m);
+        mode = m;
+        sendMode('getmode', mode);
+    });
 }
 
 
-// make a connection to background
-function connectBackground(p) {
-    return chrome.extension.connect({ name:  p });
-}
-
-// switch mode
+// get message from background script
 chrome.extension.onMessage.addListener(function(msg, sender, sendResponse){
     switch(msg.type) {
         case "switchmode":
@@ -114,7 +111,12 @@ chrome.extension.onMessage.addListener(function(msg, sender, sendResponse){
 
         case "getoauth":
             oauth = msg.mode;
+            getText();
         break;
+
+        /*case "getmode":console.log(getMode());
+            sendResponse(getMode());
+        break;*/
     }
 });
 
@@ -166,7 +168,7 @@ function getSelectedText() {
                 // console.log('parent selected node', parentEl);
                 
                 // console.log(parentEl, parentEl.nodeType == 3);
-                selectedPath = getNodePath(document.body, parentEl);
+                selectedPath = getNodePath(rootDOM, parentEl);
             }
         }
     }
@@ -186,7 +188,6 @@ function sendMessage(selectedText) {
         nodePath: selectedText.path,
         htmltext: selectedText.htmltext
     };
-    // sendMode('replace', data);
     chrome.runtime.sendMessage({type: 'replace', mode: data}, function(response){
         replaceAction(response, data.htmltext);
     });
@@ -256,7 +257,6 @@ function addRemoveAction(id) {
         var parent = $(thisElement).parent();
         var idQ = parent.attr('id');console.log(idQ);
         sendMode('deletequote', idQ);
-        // removeQuote(idQ);
         parent.removeClass('corate-highlight-text').addClass('corate-non-bg').addClass('corate-removed');
     });
 }

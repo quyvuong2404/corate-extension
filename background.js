@@ -6,7 +6,6 @@ var oauth = null;
 "use strict";
 
 (function(){
-    console.log(oauth);
 })();
 
 // document.addEventListener('DOMContentLoaded', function(){});
@@ -76,7 +75,7 @@ function sendToServer(data, callback) {
             +'&title='+data.title
             +'&nodePath='+data.nodePath
             +'&id='+oauth.id
-            +'&htmltext='+oauth.htmltext);
+            +'&htmltext='+data.htmltext);
 }
 
 // change icon
@@ -105,17 +104,12 @@ chrome.browserAction.onClicked.addListener(function(tab){
         if (oauth == null) {
             getOauth(function(response){
                 oauth = response;console.log(oauth);
-                // sendToInject({type: 'switchmode', mode: mode});
                 sendToInject({type: "getoauth", mode: oauth});
             });
-        } else {
-            sendToInject({type: "getoauth", mode: oauth});
-            // sendToInject({type: 'switchmode', mode: mode});
         }
     } else {
         changeIcon('icon-off.png');
     }
-    // sendToInject({type: 'switchmode', mode: mode});
 });
 
 // receive message from inject when page onload
@@ -155,4 +149,31 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         break;
     }
     return true;
+});
+
+
+chrome.tabs.onActivated.addListener(function(activeInfo){
+    console.log(top.location.href, 'on active');
+    console.log('active mode', mode, localStorage['corate-mode']);
+    chrome.tabs.query({active: true}, function(tabs){
+        chrome.tabs.sendMessage(tabs[0].id, {type: 'getmode'}, function(response){
+            console.log('mode', response);
+        });
+    });
+    chrome.tabs.get(activeInfo.tabId, function(tab){
+        console.log(tab.url);
+    });
+    if (mode === true) {
+        changeIcon('icon-on.png');
+    } else {
+        changeIcon('icon-off.png');
+    }
+    if (mode !== true) {
+        console.log('mode not true');
+    }
+});
+
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab){
+    console.log(top.location.href, 'on update');
+    console.log('update mode', mode);
 });
